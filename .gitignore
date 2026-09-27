@@ -1,0 +1,9 @@
+/bin/
+/dist/
+/obj/
+/.vs/
+/vx5-web-bundle.js
+/vx5-api-excerpt.txt
+/vx5-subtree.json
+/vx5-reference.jpg
+/debug.log
