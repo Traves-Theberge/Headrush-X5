@@ -19,6 +19,7 @@ Start the native app separately and select **MX5 > Connect and scan**. The servi
 | GET | `/api/v1/devices` | VX5 reachability, MX5 MIDI port and transfer drive discovery |
 | GET | `/api/v1/mx5/status` | Bridge handshake and version, MIDI ports, transfer drives |
 | GET | `/api/v1/mx5/rigs` | Rig names, IDs, program numbers, colors |
+| GET | `/api/v1/mx5/transfer/rigs` | Read rig names from the stock USB Transfer drive |
 | POST | `/api/v1/mx5/rigs/load` | Load `{ "program": 1 }` (1 through 128) |
 | GET | `/api/v1/mx5/properties?path=/Engine/Patch/Amp/Bass` | Read live property info |
 | PUT | `/api/v1/mx5/properties` | Set `{ "path": "/Engine/Patch/Amp/Bass", "field": "unnormalized", "value": 6.5 }` |
@@ -38,7 +39,7 @@ The API serializes MX5 bridge operations to avoid overlapping WinMM port access.
 
 ## Hardware state on 2026-10-01
 
-With the user's MX5 powered on at its normal rig screen and attached by USB, Windows enumerated no HeadRush USB device, no MX5 MIDI input or output, and no transfer drive. The local API and client self-test pass, but live MX5 commands cannot be verified or used until Windows sees the device and compatible bridge firmware is present. First resolve USB enumeration with a known data-capable USB cable and a direct PC port. For stock file backup, select Global Settings > USB Transfer on the MX5, copy its visible files, eject, then Sync. Flashing third-party firmware has not been performed in this project.
+After changing the USB connection and entering Global Settings > USB Transfer, Windows detected the `HeadRush` drive as `D:\` with 278 rig files. The visible user folders and logo were copied to the local, Git-ignored `backups/mx5-usb-transfer-2026-10-01` folder. All 1,275 copied files matched their source SHA-256 hashes. The native app can list rig names from USB Transfer, but cannot load or edit them live in that mode. The bridge MIDI port is absent in stock transfer mode, and live MX5 commands remain unverified. Compatible bridge firmware has not been installed in this project. Windows Application Control blocked the upstream patcher executable with the reason `Malicious binary reputation`; the application policy has not been bypassed.
 
 ## Protocol sources
 

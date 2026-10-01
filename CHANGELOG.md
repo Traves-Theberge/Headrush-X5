@@ -1,11 +1,16 @@
 # Changelog
 
+## 0.2.1 - 2026-10-01
+
+- Confirmed USB Transfer detection and made a locally verified backup of the MX5 user files.
+- Added read-only MX5 rig browsing from the stock USB Transfer drive.
+
 ## 0.2.0 - 2026-10-01
 
 - Added a loopback X5 Control API for VX5 state and MX5 Bridge discovery, rig lists, rig recall, property read/write, and footswitch presses.
 - Added a Windows MIDI SysEx bridge client with chunked reply and Unicode handling.
 - Added live MX5 rig and property controls to the native app, plus USB Transfer drive detection.
-- Documented the bridge firmware prerequisite and the unresolved MX5 USB enumeration issue.
+- Documented the bridge firmware prerequisite and MX5 USB discovery process.
 
 ## 0.1.0 - 2026-09-27
 

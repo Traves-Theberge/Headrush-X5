@@ -38,7 +38,7 @@ The VX5 landing view mirrors the pedal. Click **Pedal View** to return to it fro
 
 The MX5 panel now includes a live rig browser, rig recall, and a property editor backed by a local API. Start it with `powershell.exe -ExecutionPolicy Bypass -File .\run-service.ps1`, then select **MX5 > Connect and scan** in the app. Node.js is required for the API. The bridge client uses Windows MIDI directly and needs compatible [MX5 Bridge firmware](https://github.com/TicT4x/MX-Edit); ordinary stock USB audio mode does not expose live parameter control. See [MX5 USB API](docs/mx5-usb-api.md) for routes, examples, and the current hardware result.
 
-The MX5 panel also sends documented MIDI program changes, footswitch commands, effect block commands, and looper commands through an external USB MIDI interface connected to the MX5's 3.5 mm MIDI input. Enable MIDI Program Change receive on the pedal. **USB Transfer** can expose rig files as a drive for read-only scanning. The MX5 has not yet been detected by this PC over USB, so live bridge commands remain unverified.
+The MX5 panel also sends documented MIDI program changes, footswitch commands, effect block commands, and looper commands through an external USB MIDI interface connected to the MX5's 3.5 mm MIDI input. Enable MIDI Program Change receive on the pedal. **USB Transfer** exposes rig files as a drive for read-only browsing in the app. This PC has detected the MX5 transfer drive and backed up its visible files; live bridge commands remain unverified because the bridge MIDI port is not present.
 
 ## Current limits
 

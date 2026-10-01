@@ -20,6 +20,8 @@ namespace X5Control {
     TextBlock mxUsbStatus;
     TextBlock mxLiveStatus;
     ListBox mxRigList;
+    Button mxLoadRigButton;
+    bool mxRigLive;
     TextBox mxPropertyPath, mxPropertyField, mxPropertyValue;
     readonly List<Dictionary<string, object>> mxRigs = new List<Dictionary<string, object>>();
     Border MxCard(string title, string description) {
@@ -49,8 +51,8 @@ namespace X5Control {
       var rigsCard = (StackPanel)MxCard("LIVE RIG LIBRARY", "Names read directly from the MX5. Select a rig and load it on the pedal.").Child;
       mxRigList = new ListBox { Height = 195, Background = BrushOf("#101820"), Foreground = BrushOf("#F2F3F5") };
       rigsCard.Children.Add(mxRigList);
-      var loadRig = new Button { Content = "Load selected rig", Background = BrushOf("#216B56"), Margin = new Thickness(0, 10, 0, 0) };
-      loadRig.Click += async delegate { await LoadMxRig(); }; rigsCard.Children.Add(loadRig);
+      mxLoadRigButton = new Button { Content = "Load selected rig", Background = BrushOf("#216B56"), Margin = new Thickness(0, 10, 0, 0), IsEnabled = false };
+      mxLoadRigButton.Click += async delegate { await LoadMxRig(); }; rigsCard.Children.Add(mxLoadRigButton);
       var propertyCard = (StackPanel)MxCard("LIVE PARAMETER", "Read and edit a bridge property path, including effect block settings.").Child;
       mxPropertyPath = new TextBox { Text = "/Engine/Patch/Amp/Bass" }; propertyCard.Children.Add(mxPropertyPath);
       mxPropertyField = new TextBox { Text = "unnormalized", Margin = new Thickness(0, 7, 0, 0) }; propertyCard.Children.Add(mxPropertyField);
@@ -96,9 +98,20 @@ namespace X5Control {
         mxLiveStatus.Text = "Scanning MX5 Bridge...";
         var status = Dict(await Task.Run(() => MxApi("/api/v1/mx5/status", "GET", null)));
         if (!Convert.ToBoolean(status["connected"])) {
-          mxLiveStatus.Text = "No MX5 Bridge MIDI port. Check the USB cable and firmware; stock MX5 firmware does not provide live USB control.";
-          mxRigList.Items.Clear(); return;
+          mxRigLive = false; mxLoadRigButton.IsEnabled = false;
+          mxRigList.Items.Clear(); mxRigs.Clear();
+          var drives = status["transferDrives"] as object[];
+          if (drives != null && drives.Length > 0) {
+            var transfer = Dict(await Task.Run(() => MxApi("/api/v1/mx5/transfer/rigs", "GET", null)));
+            foreach (object item in (object[])transfer["rigs"]) {
+              var row = Dict(item); if (row == null) continue;
+              mxRigs.Add(row); mxRigList.Items.Add(Convert.ToString(row["name"]));
+            }
+            mxLiveStatus.Text = "USB Transfer connected: " + mxRigs.Count + " rig files. Eject and Sync on the MX5 when finished. Live controls require MX5 Bridge firmware.";
+          } else mxLiveStatus.Text = "No MX5 Bridge MIDI port or USB Transfer drive found.";
+          return;
         }
+        mxRigLive = true; mxLoadRigButton.IsEnabled = true;
         mxLiveStatus.Text = "Connected: " + Convert.ToString(status["bridgeVersion"]);
         var result = Dict(await Task.Run(() => MxApi("/api/v1/mx5/rigs", "GET", null)));
         mxRigs.Clear(); mxRigList.Items.Clear();
@@ -111,6 +124,7 @@ namespace X5Control {
       } catch (Exception ex) { mxLiveStatus.Text = "X5 API unavailable: " + Message(ex) + " Run run-service.ps1."; }
     }
     async Task LoadMxRig() {
+      if (!mxRigLive) { Status("USB Transfer lists files only; live rig loading requires MX5 Bridge"); return; }
       int index = mxRigList.SelectedIndex;
       if (index < 0 || index >= mxRigs.Count) { Status("Select an MX5 rig first"); return; }
       try {

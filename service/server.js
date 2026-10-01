@@ -2,6 +2,7 @@
 
 const http = require('node:http');
 const path = require('node:path');
+const fs = require('node:fs');
 const { execFile } = require('node:child_process');
 
 const host = '127.0.0.1';
@@ -57,6 +58,24 @@ function validPath(value) {
   return typeof value === 'string' && value.length <= 256 && /^\/Engine\/[\w/.-]+$/.test(value);
 }
 
+function transferRigs(root) {
+  const rigRoot = path.join(root, 'Rigs');
+  const rigs = [];
+  if (!fs.existsSync(rigRoot)) return rigs;
+  function walk(folder) {
+    for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+      const full = path.join(folder, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && /\.rig$/i.test(entry.name)) {
+        const file = JSON.parse(fs.readFileSync(full, 'utf8'));
+        rigs.push({ name: path.basename(entry.name, path.extname(entry.name)), path: path.relative(rigRoot, full), id: file.id || null, program: file.prog_num ?? null });
+      }
+    }
+  }
+  walk(rigRoot);
+  return rigs.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+}
+
 async function vxRequest(route, method, body) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 4500);
@@ -92,6 +111,11 @@ async function handle(req, res) {
     return send(res, 200, { ok: true, bridgePortPresent, connected: Boolean(version), bridgeVersion: version, transferDrives: drives, ports });
   }
   if (req.method === 'GET' && route === '/api/v1/mx5/rigs') return send(res, 200, { ok: true, rigs: await bridge(['rigs'], 25000) });
+  if (req.method === 'GET' && route === '/api/v1/mx5/transfer/rigs') {
+    const drives = await bridge(['drives']);
+    if (!drives.length) return send(res, 503, { ok: false, error: 'No HeadRush USB Transfer drive is connected' });
+    return send(res, 200, { ok: true, mode: 'offline-transfer', rigs: transferRigs(drives[0].root) });
+  }
   if (req.method === 'GET' && route === '/api/v1/mx5/properties') {
     const propertyPath = url.searchParams.get('path');
     if (!validPath(propertyPath)) return send(res, 400, { ok: false, error: 'Invalid MX5 property path' });

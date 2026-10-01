@@ -1,5 +1,6 @@
 /bin/
 /dist/
+/backups/
 /obj/
 /.vs/
 /vx5-web-bundle.js
