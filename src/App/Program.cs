@@ -102,7 +102,7 @@ namespace X5Control {
       Bind("VxTalkOn", delegate { RequestTalk(true); });
       BuildMxPage();
       window.Loaded += delegate {
-        ScanMidi(); RefreshVx();
+        ScanMidi(); ScanMxUsb(); RefreshVx();
         window.Dispatcher.BeginInvoke(new Action(delegate { Find<ScrollViewer>("VxActionsScroll").ScrollToTop(); }), DispatcherPriority.Loaded);
       };
     }

@@ -8,6 +8,6 @@ The repository keeps source and documentation in Git. Build outputs and local pr
 4. Verify that the window opens, the five VX5 menus are present, and the VX5 connection state is shown if a VX5 is attached.
 5. Compare the ZIP hash with `X5Control-<version>-windows-portable.sha256` before distributing it.
 
-The package contains `X5Control.exe`, `MainWindow.xaml`, `START-HERE.txt`, `README.md`, and `CHANGELOG.md`. `presets.user.json` is deliberately excluded because it contains the user's local preset names and snapshots. The package is portable and unsigned; it is not an installer.
+The package contains the app, its XAML, the MX5 bridge client, the local API server, `run-service.ps1`, and documentation. `presets.user.json` is deliberately excluded because it contains the user's local preset names and snapshots. The package is portable and unsigned; it is not an installer. MX5 live USB control requires Node.js and compatible bridge firmware.
 
 The current project has no GitHub Actions pipeline. A release is built and verified locally before its ZIP and checksum are uploaded to GitHub Releases.

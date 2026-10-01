@@ -4,13 +4,19 @@ $ErrorActionPreference = 'Stop'
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Version must use major.minor.patch.' }
 
 $releaseDir = Join-Path $PSScriptRoot 'dist'
-$buildDir = Join-Path $PSScriptRoot 'bin\package'
+$buildDir = Join-Path $PSScriptRoot "bin\package-$Version"
 $packageName = "X5Control-$Version-windows-portable"
 $archive = Join-Path $releaseDir "$packageName.zip"
 $checksum = Join-Path $releaseDir "$packageName.sha256"
 
 & (Join-Path $PSScriptRoot 'build.ps1') -OutputDirectory $buildDir
 if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'Build failed.' }
+& (Join-Path $PSScriptRoot 'build-service.ps1') -OutputDirectory (Join-Path $buildDir 'bin\service')
+if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'MX5 bridge build failed.' }
+New-Item -ItemType Directory -Path (Join-Path $buildDir 'service') -Force | Out-Null
+Copy-Item (Join-Path $PSScriptRoot 'service\server.js') (Join-Path $buildDir 'service\server.js') -Force
+Copy-Item (Join-Path $PSScriptRoot 'run-service.ps1') (Join-Path $buildDir 'run-service.ps1') -Force
+Copy-Item (Join-Path $PSScriptRoot 'build-service.ps1') (Join-Path $buildDir 'build-service.ps1') -Force
 
 $exe = Join-Path $buildDir 'X5Control.exe'
 $xaml = Join-Path $buildDir 'MainWindow.xaml'
@@ -31,8 +37,10 @@ Local preset names and custom patches are written to presets.user.json in this f
 To move an existing preset library, close the app and copy presets.user.json
 from the old app folder into this extracted folder.
 
-The MX5 panel requires a separate USB MIDI interface connected to the MX5
-3.5 mm MIDI input. MX5 hardware operation has not yet been verified.
+For MX5 live USB control, install Node.js and start run-service.ps1, then use
+MX5 > Connect and scan in the app. Compatible MX5 Bridge firmware is required.
+Stock firmware supports performance MIDI through an external USB MIDI interface
+connected to the MX5 3.5 mm MIDI input. Live MX5 hardware operation is unverified.
 
 See README.md for controls and device limitations.
 "@
@@ -42,8 +50,7 @@ Copy-Item (Join-Path $PSScriptRoot 'README.md') (Join-Path $buildDir 'README.md'
 Copy-Item (Join-Path $PSScriptRoot 'CHANGELOG.md') (Join-Path $buildDir 'CHANGELOG.md') -Force
 
 New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
-$files = @($exe, $xaml, $instructionsPath, (Join-Path $buildDir 'README.md'), (Join-Path $buildDir 'CHANGELOG.md'))
-Compress-Archive -LiteralPath $files -DestinationPath $archive -CompressionLevel Optimal -Force
+Compress-Archive -Path (Join-Path $buildDir '*') -DestinationPath $archive -CompressionLevel Optimal -Force
 $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
 [System.IO.File]::WriteAllText($checksum, "$hash *$packageName.zip`n", [System.Text.UTF8Encoding]::new($false))
 Write-Host "Package: $archive"
